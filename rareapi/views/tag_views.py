@@ -19,7 +19,7 @@ def tags(request):
         return Response({'id': new_tag.id, 'label': new_tag.label}, status=201)
 
 
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def tag_detail(request, pk):
@@ -35,3 +35,7 @@ def tag_detail(request, pk):
         tag.label = request.data.get('label', tag.label)
         tag.save()
         return Response({'id': tag.id, 'label': tag.label})
+
+    if request.method == 'DELETE':
+        tag.delete()
+        return Response(status=204)
