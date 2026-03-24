@@ -20,6 +20,11 @@ def profile_detail(request, pk):
         ended_on__isnull=True
     ).exists()
 
+    subscriber_count = Subscription.objects.filter(
+        author=user,
+        ended_on__isnull=True
+    ).count()
+
     data = {
         'id': user.id,
         'full_name': f'{user.first_name} {user.last_name}'.strip(),
@@ -29,6 +34,7 @@ def profile_detail(request, pk):
         'created_on': user.created_on.strftime('%m/%d/%Y'),
         'user_type': 'Admin' if user.is_staff else 'Author',
         'is_subscribed': is_subscribed,
+        'subscriber_count': subscriber_count,
     }
     return Response(data)
 
