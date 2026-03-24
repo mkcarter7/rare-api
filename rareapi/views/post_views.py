@@ -144,6 +144,34 @@ def user_post_list(request, user_id):
     return Response(data)
 
 
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def subscribed_posts(request):
+    subscribed_author_ids = request.user.subscriptions.values_list('author_id', flat=True)
+    posts = (
+        Post.objects
+        .select_related('user', 'category')
+        .filter(
+            user_id__in=subscribed_author_ids,
+            approved=True,
+            publication_date__lte=timezone.now().date()
+        )
+        .order_by('-publication_date')
+    )
+    data = [
+        {
+            'id': post.id,
+            'title': post.title,
+            'publication_date': post.publication_date,
+            'user': {'id': post.user.id, 'username': post.user.username},
+            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
+        }
+        for post in posts
+    ]
+    return Response(data)
+
+
 @api_view(['PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
