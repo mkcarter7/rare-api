@@ -15,7 +15,8 @@ def login_user(request):
         if user.check_password(password):
             return Response({
                 'valid': True,
-                'token': user.id
+                'token': user.id,
+                'is_staff': user.is_staff
             })
         else:
             return Response({'valid': False})
@@ -39,5 +40,6 @@ def register_user(request):
 
     return Response({
         'valid': True,
-        'token': new_user.id
+        'token': new_user.id,
+        'is_staff': new_user.is_staff
     })
