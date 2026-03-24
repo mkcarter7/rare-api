@@ -76,6 +76,30 @@ def post_detail(request, pk):
     return Response(serialize_post(post))
 
 
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def my_post_list(request):
+    posts = (
+        Post.objects
+        .select_related('user', 'category')
+        .filter(user=request.user)
+        .order_by('-publication_date', '-id')
+    )
+    data = [
+        {
+            'id': post.id,
+            'title': post.title,
+            'publication_date': post.publication_date,
+            'approved': post.approved,
+            'user': {'id': post.user.id, 'username': post.user.username},
+            'category': {'id': post.category.id, 'label': post.category.label} if post.category else None,
+        }
+        for post in posts
+    ]
+    return Response(data)
+
+
 @api_view(['PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
