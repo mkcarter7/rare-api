@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rareapi.authentication import RareAuthentication
-from rareapi.models import RareUser
+from rareapi.models import RareUser, Subscription
 
 
 @api_view(['GET'])
@@ -14,6 +14,12 @@ def profile_detail(request, pk):
     except RareUser.DoesNotExist:
         return Response({'error': 'Not found'}, status=404)
 
+    is_subscribed = Subscription.objects.filter(
+        follower=request.user,
+        author=user,
+        ended_on__isnull=True
+    ).exists()
+
     data = {
         'id': user.id,
         'full_name': f'{user.first_name} {user.last_name}'.strip(),
@@ -22,6 +28,7 @@ def profile_detail(request, pk):
         'profile_image_url': user.profile_image_url,
         'created_on': user.created_on.strftime('%m/%d/%Y'),
         'user_type': 'Admin' if user.is_staff else 'Author',
+        'is_subscribed': is_subscribed,
     }
     return Response(data)
 

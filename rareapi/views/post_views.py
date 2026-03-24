@@ -148,7 +148,7 @@ def user_post_list(request, user_id):
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def subscribed_posts(request):
-    subscribed_author_ids = request.user.subscriptions.values_list('author_id', flat=True)
+    subscribed_author_ids = request.user.subscriptions.filter(ended_on__isnull=True).values_list('author_id', flat=True)
     posts = (
         Post.objects
         .select_related('user', 'category')
