@@ -64,7 +64,7 @@ def post_list(request):
     return Response(data)
 
 
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
 def post_detail(request, pk):
@@ -72,6 +72,12 @@ def post_detail(request, pk):
         post = Post.objects.select_related('user', 'category').get(pk=pk)
     except Post.DoesNotExist:
         return Response({'error': 'Not found'}, status=404)
+
+    if request.method == 'DELETE':
+        if post.user != request.user:
+            return Response({'error': 'Forbidden'}, status=403)
+        post.delete()
+        return Response(status=204)
 
     if request.method == 'PUT':
         if post.user != request.user:
