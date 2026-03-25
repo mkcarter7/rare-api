@@ -5,4 +5,4 @@ from .post_views import post_list, post_detail, post_tags, approve_post, unappro
 from .category_views import category_list, category_detail
 from .comment_views import post_comments, comment_detail
 from .subscription_views import subscribe, unsubscribe
-from .reaction_views import reaction_list
+from .reaction_views import reaction_list, post_reaction_list, post_reaction_detail

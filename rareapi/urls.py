@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list
+from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list, post_reaction_list, post_reaction_detail
 
 urlpatterns = [
     path('login', login_user, name='login'),
@@ -33,4 +33,6 @@ urlpatterns = [
     path('demotionqueue', demotion_queue_list, name='demotion_queue_list'),
     path('demotionqueue/<int:pk>', cancel_demotion_queue_item, name='cancel_demotion_queue_item'),
     path('reactions', reaction_list, name='reaction_list'),
+    path('posts/<int:pk>/reactions', post_reaction_list, name='post_reaction_list'),
+    path('posts/<int:pk>/reactions/<int:reaction_id>', post_reaction_detail, name='post_reaction_detail'),
 ]
