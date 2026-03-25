@@ -75,3 +75,20 @@ def deactivate_user(request, pk):
     user.active = False
     user.save()
     return Response(status=204)
+
+
+@api_view(['PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def reactivate_user(request, pk):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    try:
+        user = RareUser.objects.get(pk=pk)
+    except RareUser.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    user.active = True
+    user.save()
+    return Response(status=204)
