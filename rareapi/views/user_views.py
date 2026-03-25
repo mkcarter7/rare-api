@@ -53,7 +53,25 @@ def profile_list(request):
             'full_name': f'{user.first_name} {user.last_name}'.strip(),
             'username': user.username,
             'user_type': 'Admin' if user.is_staff else 'Author',
+            'active': user.active,
         }
         for user in users
     ]
     return Response(data)
+
+
+@api_view(['PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def deactivate_user(request, pk):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    try:
+        user = RareUser.objects.get(pk=pk)
+    except RareUser.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    user.active = False
+    user.save()
+    return Response(status=204)

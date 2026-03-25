@@ -14,6 +14,8 @@ class RareAuthentication(BaseAuthentication):
             if token_type.lower() != 'token':
                 return None
             user = RareUser.objects.get(pk=int(token))
+            if not user.active:
+                raise AuthenticationFailed('User account is deactivated')
             return (user, None)
         except (ValueError, RareUser.DoesNotExist):
             raise AuthenticationFailed('Invalid token')
