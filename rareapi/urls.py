@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list, post_reaction_list, post_reaction_detail
+from .views import login_user, register_user, tags, tag_detail, tag_post_list, post_list, post_detail, post_tags, approve_post, unapprove_post, unapproved_post_list, approved_post_list, category_list, category_detail, category_post_list, my_post_list, post_comments, comment_detail, profile_list, profile_detail, deactivate_user, reactivate_user, change_user_type, upload_profile_image, user_post_list, subscribe, unsubscribe, subscribed_posts, demotion_queue_list, cancel_demotion_queue_item, search_posts, reaction_list, post_reaction_list, post_reaction_detail
 
 urlpatterns = [
     path('login', login_user, name='login'),
@@ -23,6 +23,7 @@ urlpatterns = [
     path('comments/<int:pk>', comment_detail, name='comment_detail'),
     path('profiles', profile_list, name='profile_list'),
     path('profiles/<int:pk>', profile_detail, name='profile_detail'),
+    path('profiles/<int:pk>/image', upload_profile_image, name='upload_profile_image'),
     path('profiles/<int:pk>/deactivate', deactivate_user, name='deactivate_user'),
     path('profiles/<int:pk>/reactivate', reactivate_user, name='reactivate_user'),
     path('profiles/<int:pk>/type', change_user_type, name='change_user_type'),

@@ -1,3 +1,5 @@
+import os
+from django.conf import settings
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -205,6 +207,40 @@ def demotion_queue_list(request):
         })
 
     return Response(data)
+
+
+@api_view(['PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def upload_profile_image(request, pk):
+    if request.user.id != pk:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    if 'image' not in request.FILES:
+        return Response({'error': 'No image provided'}, status=400)
+
+    image = request.FILES['image']
+    filename = f"profile_{pk}_{image.name}"
+    upload_dir = os.path.join(settings.MEDIA_ROOT, 'profile_images')
+    os.makedirs(upload_dir, exist_ok=True)
+
+    filepath = os.path.join(upload_dir, filename)
+    with open(filepath, 'wb+') as dest:
+        for chunk in image.chunks():
+            dest.write(chunk)
+
+    relative_url = f"{settings.MEDIA_URL}profile_images/{filename}"
+    absolute_url = request.build_absolute_uri(relative_url)
+
+    try:
+        user = RareUser.objects.get(pk=pk)
+    except RareUser.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    user.profile_image_url = absolute_url
+    user.save()
+
+    return Response({'profile_image_url': absolute_url})
 
 
 @api_view(['DELETE'])
