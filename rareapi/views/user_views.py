@@ -92,3 +92,27 @@ def reactivate_user(request, pk):
     user.active = True
     user.save()
     return Response(status=204)
+
+
+@api_view(['PUT'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def change_user_type(request, pk):
+    if not request.user.is_staff:
+        return Response({'error': 'Forbidden'}, status=403)
+
+    try:
+        user = RareUser.objects.get(pk=pk)
+    except RareUser.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    user_type = request.data.get('user_type')
+    if user_type == 'Admin':
+        user.is_staff = True
+    elif user_type == 'Author':
+        user.is_staff = False
+    else:
+        return Response({'error': 'Invalid user_type'}, status=400)
+
+    user.save()
+    return Response(status=204)
