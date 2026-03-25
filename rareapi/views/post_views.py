@@ -318,6 +318,32 @@ def tag_post_list(request, tag_id):
     return Response(data)
 
 
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def search_posts(request):
+    query = request.query_params.get('q', '').strip()
+    if not query:
+        return Response([])
+
+    posts = (
+        Post.objects
+        .select_related('user', 'category')
+        .filter(title__icontains=query, approved=True, publication_date__lte=timezone.now().date())
+        .order_by('-publication_date')
+    )
+    data = [
+        {
+            'id': post.id,
+            'title': post.title,
+            'publication_date': post.publication_date,
+            'user': {'id': post.user.id, 'username': post.user.username},
+        }
+        for post in posts
+    ]
+    return Response(data)
+
+
 @api_view(['PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
