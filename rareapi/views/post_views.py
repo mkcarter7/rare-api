@@ -258,6 +258,36 @@ def approved_post_list(request):
     return Response(data)
 
 
+@api_view(['GET'])
+@authentication_classes([RareAuthentication])
+@permission_classes([IsAuthenticated])
+def category_post_list(request, category_id):
+    try:
+        category = Category.objects.get(pk=category_id)
+    except Category.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    posts = (
+        Post.objects
+        .select_related('user', 'category')
+        .filter(category=category, approved=True, publication_date__lte=timezone.now().date())
+        .order_by('-publication_date')
+    )
+    data = {
+        'category': {'id': category.id, 'label': category.label},
+        'posts': [
+            {
+                'id': post.id,
+                'title': post.title,
+                'publication_date': post.publication_date,
+                'user': {'id': post.user.id, 'username': post.user.username},
+            }
+            for post in posts
+        ]
+    }
+    return Response(data)
+
+
 @api_view(['PUT'])
 @authentication_classes([RareAuthentication])
 @permission_classes([IsAuthenticated])
