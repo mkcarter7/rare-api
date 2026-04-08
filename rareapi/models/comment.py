@@ -6,3 +6,4 @@ class Comment(models.Model):
     author = models.ForeignKey('RareUser', on_delete=models.CASCADE, related_name='comments')
     subject = models.CharField(max_length=300, default='')
     content = models.TextField()
+    created_on = models.DateTimeField(auto_now_add=True)

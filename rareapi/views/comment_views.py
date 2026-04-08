@@ -12,6 +12,7 @@ def serialize_comment(comment):
         'content': comment.content,
         'post': comment.post_id,
         'author': {'id': comment.author.id, 'username': comment.author.username},
+        'created_on': comment.created_on,
     }
 
 
