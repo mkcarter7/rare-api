@@ -225,10 +225,19 @@ def search_posts(request):
     if not query:
         return Response([])
 
+    filters = {
+        'title__icontains': query,
+        'approved': True,
+        'publication_date__lte': timezone.now().date(),
+    }
+    author_id = request.query_params.get('author')
+    if author_id:
+        filters['user_id'] = author_id
+
     posts = (
         Post.objects
         .select_related('user', 'category')
-        .filter(title__icontains=query, approved=True, publication_date__lte=timezone.now().date())
+        .filter(**filters)
         .order_by('-publication_date')
     )
     return Response(PostListSerializer(posts, many=True).data)
