@@ -40,7 +40,16 @@ def post_list(request):
         .filter(approved=True, publication_date__lte=timezone.now().date())
         .order_by('-publication_date')
     )
-    return Response(PostListSerializer(posts, many=True).data)
+    page_size = 10
+    try:
+        page = max(1, int(request.query_params.get('page', 1)))
+    except (ValueError, TypeError):
+        page = 1
+    start = (page - 1) * page_size
+    return Response({
+        'count': posts.count(),
+        'results': PostListSerializer(posts[start:start + page_size], many=True).data,
+    })
 
 
 @api_view(['GET', 'PUT', 'DELETE'])

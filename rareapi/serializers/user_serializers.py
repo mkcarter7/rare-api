@@ -4,9 +4,14 @@ from rareapi.models import RareUser
 
 class UserSummarySerializer(serializers.ModelSerializer):
     """Minimal user representation for nesting inside posts, comments, etc."""
+    full_name = serializers.SerializerMethodField()
+
     class Meta:
         model = RareUser
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'full_name']
+
+    def get_full_name(self, obj):
+        return f'{obj.first_name} {obj.last_name}'.strip()
 
 
 class ProfileDetailSerializer(serializers.ModelSerializer):

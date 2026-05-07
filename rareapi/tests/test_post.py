@@ -2,7 +2,7 @@ import pytest
 from datetime import date, timedelta
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
-from rareapi.models import RareUser, Category, Post
+from rareapi.models import RareUser, Category, Post, Comment, Reaction, PostReaction
 
 
 @pytest.fixture
@@ -79,14 +79,14 @@ class TestPublicPostList:
         approved = make_post(regular_user, category, approved=True)
         make_post(regular_user, category, approved=False)
         response = regular_client.get("/posts")
-        ids = [p["id"] for p in response.json()]
+        ids = [p["id"] for p in response.json()["results"]]
         assert approved.id in ids
         assert len(ids) == 1
 
     def test_future_dated_post_is_hidden(self, regular_client, regular_user, category):
         make_post(regular_user, category, approved=True, days_offset=1)
         response = regular_client.get("/posts")
-        assert response.json() == []
+        assert response.json()["results"] == []
 
 
 class TestUnapprovedPostList:
@@ -145,6 +145,55 @@ class TestPostSearch:
         assert post_b.id in ids
 
 
+class TestPostListPagination:
+    def test_page_1_returns_10_results_and_total_count(self, regular_client, regular_user, category):
+        for i in range(15):
+            Post.objects.create(
+                user=regular_user,
+                category=category,
+                title=f"Post {i}",
+                publication_date=date.today(),
+                content="content",
+                approved=True,
+            )
+        response = regular_client.get("/posts?page=1")
+        assert response.status_code == 200
+        data = response.json()
+        assert "count" in data
+        assert "results" in data
+        assert data["count"] == 15
+        assert len(data["results"]) == 10
+
+    def test_page_2_returns_remaining_results(self, regular_client, regular_user, category):
+        for i in range(15):
+            Post.objects.create(
+                user=regular_user,
+                category=category,
+                title=f"Post {i}",
+                publication_date=date.today(),
+                content="content",
+                approved=True,
+            )
+        response = regular_client.get("/posts?page=2")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["results"]) == 5
+
+    def test_default_page_is_1(self, regular_client, regular_user, category):
+        for i in range(15):
+            Post.objects.create(
+                user=regular_user,
+                category=category,
+                title=f"Post {i}",
+                publication_date=date.today(),
+                content="content",
+                approved=True,
+            )
+        response_default = regular_client.get("/posts")
+        response_page1 = regular_client.get("/posts?page=1")
+        assert response_default.json()["results"] == response_page1.json()["results"]
+
+
 class TestApprovePost:
     def test_nonstaff_gets_403(self, regular_client, regular_user, category):
         post = make_post(regular_user, category, approved=False)
@@ -169,3 +218,27 @@ class TestUnapprovePost:
         response = staff_client.put(f"/posts/{post.id}/unapprove")
         assert response.status_code == 200
         assert response.json()["approved"] is False
+
+
+class TestPostListFields:
+    def test_list_includes_full_name_content_and_counts(self, db, regular_client, category):
+        author = RareUser.objects.create_user(
+            username="namedauthor", password="x", is_active=True,
+            first_name="Jane", last_name="Doe",
+        )
+        post = Post.objects.create(
+            user=author, category=category, title="Field Test Post",
+            publication_date=date.today(), content="Hello world", approved=True,
+        )
+        Comment.objects.create(post=post, author=author, subject="Re", content="Nice")
+        reaction = Reaction.objects.create(label="Like", image_url="👍")
+        PostReaction.objects.create(post=post, user=author, reaction=reaction)
+
+        response = regular_client.get("/posts")
+        assert response.status_code == 200
+        item = next(p for p in response.json()["results"] if p["id"] == post.id)
+
+        assert item["user"]["full_name"] == "Jane Doe"
+        assert item["content"] == "Hello world"
+        assert item["comment_count"] == 1
+        assert item["reaction_count"] == 1
