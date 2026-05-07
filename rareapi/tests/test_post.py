@@ -194,6 +194,53 @@ class TestPostListPagination:
         assert response_default.json()["results"] == response_page1.json()["results"]
 
 
+class TestPostListSorting:
+    def test_sort_oldest_returns_ascending_date_order(self, regular_client, regular_user, category):
+        older = Post.objects.create(
+            user=regular_user, category=category, title="Older Post",
+            publication_date=date.today() - timedelta(days=2),
+            content="x", approved=True,
+        )
+        newer = Post.objects.create(
+            user=regular_user, category=category, title="Newer Post",
+            publication_date=date.today() - timedelta(days=1),
+            content="x", approved=True,
+        )
+        response = regular_client.get("/posts?sort=oldest")
+        assert response.status_code == 200
+        ids = [p["id"] for p in response.json()["results"]]
+        assert ids.index(older.id) < ids.index(newer.id)
+
+    def test_sort_title_asc_returns_alphabetical_order(self, regular_client, regular_user, category):
+        banana = Post.objects.create(
+            user=regular_user, category=category, title="Banana Post",
+            publication_date=date.today(), content="x", approved=True,
+        )
+        apple = Post.objects.create(
+            user=regular_user, category=category, title="Apple Post",
+            publication_date=date.today() - timedelta(days=1), content="x", approved=True,
+        )
+        response = regular_client.get("/posts?sort=title_asc")
+        assert response.status_code == 200
+        ids = [p["id"] for p in response.json()["results"]]
+        assert ids.index(apple.id) < ids.index(banana.id)
+
+    def test_default_sort_returns_newest_first(self, regular_client, regular_user, category):
+        older = Post.objects.create(
+            user=regular_user, category=category, title="Old Post",
+            publication_date=date.today() - timedelta(days=1),
+            content="x", approved=True,
+        )
+        newer = Post.objects.create(
+            user=regular_user, category=category, title="New Post",
+            publication_date=date.today(), content="x", approved=True,
+        )
+        response = regular_client.get("/posts")
+        assert response.status_code == 200
+        ids = [p["id"] for p in response.json()["results"]]
+        assert ids.index(newer.id) < ids.index(older.id)
+
+
 class TestApprovePost:
     def test_nonstaff_gets_403(self, regular_client, regular_user, category):
         post = make_post(regular_user, category, approved=False)

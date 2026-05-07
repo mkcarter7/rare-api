@@ -34,11 +34,16 @@ def post_list(request):
         )
         return Response(PostDetailSerializer(post).data, status=201)
 
+    sort_options = {
+        'oldest': 'publication_date',
+        'title_asc': 'title',
+    }
+    order_by = sort_options.get(request.query_params.get('sort'), '-publication_date')
     posts = (
         Post.objects
         .select_related('user', 'category')
         .filter(approved=True, publication_date__lte=timezone.now().date())
-        .order_by('-publication_date')
+        .order_by(order_by)
     )
     page_size = 10
     try:
